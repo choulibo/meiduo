@@ -160,7 +160,7 @@ var vm = new Vue({
             if (this.error_phone == true || this.error_image_code == true) {
                 this.sending_flag = false;
                 return;
-            }
+            }4
 
             // 向后端接口发送请求，让后端发送短信验证码
             axios.get(this.host + '/sms_codes/' + this.mobile + '/?text=' + this.image_code+'&image_code_id='+ this.image_code_id, {
