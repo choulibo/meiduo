@@ -49,8 +49,9 @@ class SMSCodeView(GenericAPIView):
         # 1.校验参数 由序列化器完成
         serializer = self.get_serializer(data=request.query_params)  # 反序列化 query_params = request.GET
         serializer.is_valid(raise_exception=True)
-        # 2.生成短信验证码
+        # 2.生成短信验证码s
         sms_code = '%06d' % random.randint(0, 999999)
+        print(sms_code)
         # 3.保存验证码  保存发送记录
         redis_conn = get_redis_connection('verify_codes')  # 创建 redis连接对象
         # redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
@@ -61,6 +62,8 @@ class SMSCodeView(GenericAPIView):
         pl.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
         pl.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
         pl.execute()
+
+
 
         # 4.发送短信
         # try:
@@ -79,7 +82,7 @@ class SMSCodeView(GenericAPIView):
         #         logger.warning("发送验证码短信[失败][mobile:%s]"% mobile)
         #         return Response({'message':"failed"},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        expires = constants.SMS_CODE_REDIS_EXPIRES // 60
-        send_sms_code.delay(mobile,sms_code,expires,constants.SMS_CODE_TEMP_ID)
+        # expires = constants.SMS_CODE_REDIS_EXPIRES // 60
+        # send_sms_code.delay(mobile,sms_code,expires,constants.SMS_CODE_TEMP_ID)
 
         return Response({"message":"OK"})
