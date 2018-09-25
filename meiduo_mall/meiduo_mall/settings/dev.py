@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 import sys
 import datetime
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
@@ -198,8 +199,6 @@ REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
 
-
-
     # 认证
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
@@ -220,7 +219,6 @@ AUTHENTICATION_BACKENDS = [
     'users.utils.UsernameMobileAuthBackend',
 ]
 
-
 # 认证的模型类
 AUTH_USER_MODEL = 'users.User'
 
@@ -232,3 +230,9 @@ CORS_ORIGIN_WHITELIST = (
     'api.meiduo.site:8000'
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cook
+
+# QQ登录参数
+QQ_CLIENT_ID = '101474184'
+QQ_CLIENT_SECRET = 'c6ce949e04e12ecc909ae6a8b09b637c'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html'
+QQ_STATE = '/index.html'

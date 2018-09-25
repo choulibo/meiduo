@@ -5,7 +5,7 @@ from django.db import models
 from meiduo_mall.utils.models import BaseModel
 
 
-class OauthQQUser(BaseModel):
+class OAuthQQUser(BaseModel):
     """
     QQ 登录用户数据
     """
