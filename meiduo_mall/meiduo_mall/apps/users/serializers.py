@@ -90,3 +90,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user.token = token
 
         return user
+
+
+
+class UserAddressSerializer(serializers.ModelSerializer):
+    """"""

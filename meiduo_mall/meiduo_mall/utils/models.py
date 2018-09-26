@@ -9,7 +9,7 @@ class BaseModel(models.Model):
     用于增加数据新建时间和更新时间
     """
     create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    update_tiem = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    update_time = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
     class Meta:
         abstract = True  # 说明是抽象模型类,用于继承使用,数据库迁移时不会创建BaseMdel的表
