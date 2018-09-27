@@ -1,11 +1,9 @@
-from django.shortcuts import render
-
 # Create your views here.
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework_extensions.cache.mixins import CacheResponseMixin
 
-from .models import Area
 from . import serializers
+from .models import Area
 
 
 class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
@@ -25,4 +23,3 @@ class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
 
         else:
             return serializers.SubAreaSerializer
-

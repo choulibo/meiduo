@@ -1,7 +1,8 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework import mixins
+from rest_framework import mixins, status
+from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
@@ -14,6 +15,7 @@ from rest_framework.viewsets import GenericViewSet
 from users import serializers
 from users.serializers import CreateUserSerializer
 from .models import User
+from . import constants
 
 
 class UserView(CreateAPIView):
@@ -64,46 +66,64 @@ class MobileCountView(APIView):
         return Response(data)
 
 
-class AddressViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin,GenericViewSet):
+class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericViewSet):
     """用户地址新增与修改"""
     serializer_class = serializers.UserAddressSerializer
-    permission_classes = [IsAuthenticated]
+    permissions = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.request.user.addresses.filter(is_delete = False)
+        return self.request.user.addresses.filter(is_delete=False)
 
-
-        # GET /addresses/
-    def list(self,request,*args,**kwargs):
+    # GET /addresses/
+    def list(self, request, *args, **kwargs):
         """用户地址列表数据"""
         queryset = self.get_queryset()
 
-        serializer = self.get_serializer(queryset,many = True)
-        user = self .request.user
+        serializer = self.get_serializer(queryset, many=True)
+        user = self.request.user
         return Response({
-            'user_id':user.id,
-            'default_addresses_id':user.default_address_id
+            'user_id': user.id,
+            'default_addresses_id': user.default_address_id,
+            'limit': constants.USER_ADDRESS_COUNTS_LIMIT,
+            'addresses': serializers.data,
         })
 
+    # POST /addresses/
+    def create(self, request, *args, **kwargs):
+        """保存用户地址数据"""
+        # 保存用户地址数据数目不能超过上限
+        # 在保存数据之前进行验证数据
+        count = request.user.addresses.count()
+        if count >= constants.USER_ADDRESS_COUNTS_LIMIT:
+            return Response({'message': "保存地址数据已达上限"})
 
+        return super().create(request, *args, **kwargs)
 
+    def destory(self, request, *args, **kwargs):
+        """处理删除"""
+        # 获取对象
+        address = self.get_object()
+        # 进行逻辑删除
+        address.is_deleted = True
+        address.save()
 
+        # 204 表示删除成功
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @action(methods=['put'], detail=True)
+    def status(self, request, pk=None):
+        """设置默认地址"""
+        # 获取对象
+        address = self.get_object()
+        # 将对象保存到
+        request.user.default_address = address
+        request.user.save()
+        return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+    @action(methods=['put'],detail=True)
+    def title(self, request, pk=None):
+        """修改标题"""
+        address = self.get_object()
+        serializer = serializers.AddressTitleSerializer(instance=address, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
