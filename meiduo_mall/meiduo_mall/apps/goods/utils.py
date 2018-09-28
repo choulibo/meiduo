@@ -4,7 +4,7 @@ from collections import OrderedDict
 from goods.models import GoodsChannel
 
 
-def get_category():
+def get_categories():
     """获取商城商品分类菜单"""
 
     # 商品频道及分类菜单

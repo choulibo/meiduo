@@ -16,4 +16,4 @@ celery_app.config_from_object('celery_tasks.config')
 
 # 导入任务  即找到tasks
 
-celery_app.autodiscover_tasks(["celery_tasks.sms"])
+celery_app.autodiscover_tasks(["celery_tasks.sms","celery_tasks.html"])

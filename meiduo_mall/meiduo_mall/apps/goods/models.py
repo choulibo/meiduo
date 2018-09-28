@@ -9,7 +9,7 @@ from meiduo_mall.utils.models import BaseModel
 
 class GoodsCategory(BaseModel):
     """
-    商品类别
+    商品类别(二级)
     """
     name = models.CharField(max_length=10, verbose_name='名称')
     parent = models.ForeignKey(
@@ -26,7 +26,7 @@ class GoodsCategory(BaseModel):
 
 class GoodsChannel(BaseModel):
     """
-    商品频道
+    商品频道(一级)
     """
     group_id = models.IntegerField(verbose_name='组号')
     category = models.ForeignKey(
@@ -62,7 +62,7 @@ class Brand(BaseModel):
 
 class Goods(BaseModel):
     """
-    商品SPU
+    商品SPU(三级)
     """
     name = models.CharField(max_length=50, verbose_name='名称')
     brand = models.ForeignKey(
