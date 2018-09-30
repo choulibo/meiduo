@@ -1,9 +1,10 @@
+# coding:utf-8
 from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
@@ -12,10 +13,12 @@ from rest_framework.views import APIView
 # from meiduo_mall.apps.users.models import User
 from rest_framework.viewsets import GenericViewSet
 
-from users import serializers
-from users.serializers import CreateUserSerializer
+from . import serializers
+from .serializers import CreateUserSerializer
 from .models import User
 from . import constants
+from django_redis import get_redis_connection
+from goods.models import SKU
 
 
 class UserView(CreateAPIView):
@@ -119,11 +122,40 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         request.user.default_address = address
         request.user.save()
         return Response({'message': 'OK'}, status=status.HTTP_200_OK)
-    @action(methods=['put'],detail=True)
+
+    @action(methods=['put'], detail=True)
     def title(self, request, pk=None):
         """修改标题"""
         address = self.get_object()
         serializer = serializers.AddressTitleSerializer(instance=address, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+
+
+class UserBrowsingHistoryView(CreateAPIView):
+    """
+    用户浏览历史记录
+    """
+    serializer_class = serializers.AddUserBrowsingHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # user_id
+        user_id = request.user.id
+
+        # 查询redis  list
+        redis_conn = get_redis_connection('history')
+        sku_id_list = redis_conn.lrange('history_%s' % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT -1)
+
+        # 数据库
+        # sku_object_list = SKU.objects.filter(id__in=sku_id_list)
+
+        skus = []
+        for sku_id in sku_id_list:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append(sku)
+
+        # 序列化 返回
+        serializer = serializers.SKUSerializer(skus, many=True)
         return Response(serializer.data)

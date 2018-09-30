@@ -6,7 +6,10 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
+from goods.models import SKU
 from .models import User, Address
+from . import constants
+
 
 class CreateUserSerializer(serializers.ModelSerializer):
     """创建用户的序列化器"""
@@ -123,11 +126,56 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
 
 class AddressTitleSerializer(serializers.ModelSerializer):
-    
-
     """
     地址标题
     """
+
     class Meta:
         model = Address
         fields = ('title',)
+
+
+class AddUserBrowsingHistorySerializer(serializers.Serializer):
+    sku_id = serializers.IntegerField(label="商品SKU编号", min_value=1)
+
+    def validate_sku_id(self, value):
+        """
+        检验sku_id是否存在
+        """
+        try:
+            SKU.objects.get(id=value)
+        except SKU.DoesNotExist:
+            raise serializers.ValidationError('该商品不存在')
+        return value
+
+    def create(self, validated_data):
+        # sku_id
+        sku_id = validated_data['sku_id']
+
+        # user_id
+        user = self.context['request'].user
+
+        # redis  [6, 1,2,3,4,5]
+        redis_conn = get_redis_connection('history')
+        pl = redis_conn.pipeline()
+
+        redis_key = 'history_%s' % user.id
+        # 去重
+        pl.lrem(redis_key, 0, sku_id)
+
+        # 保存 增加
+        pl.lpush(redis_key, sku_id)
+
+        # 截断
+        pl.ltrim(redis_key, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
+
+        pl.execute()
+
+        return validated_data
+
+
+class SKUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SKU
+        fields = ('id', 'name', 'price', 'default_image_url', 'comments')
+

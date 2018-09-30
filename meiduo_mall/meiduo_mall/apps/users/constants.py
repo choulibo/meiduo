@@ -1,3 +1,5 @@
 # coding = utf-8
 # 用户地址限制数量
 USER_ADDRESS_COUNTS_LIMIT = 20
+# 用户浏览历史记录
+USER_BROWSING_HISTORY_COUNTS_LIMIT = 5
