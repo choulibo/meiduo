@@ -1,7 +1,7 @@
 # coding = utf-8
 # from . models import User
 import re
-
+from celery_tasks.email.tasks import send_active_email
 from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
@@ -94,6 +94,43 @@ class CreateUserSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    """用户详情信息序列化器"""
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'mobile', 'email', 'email_active']
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    """保存邮箱的序列化器"""
+
+    class Meta:
+        model = User
+        fields = ['id', 'email']
+        extra_kwargs = {
+            'email': {
+                'required': True
+            }
+        }
+
+    def update(self, instance, validated_data):
+        """
+
+        :param instance: 视图传过来的user对象
+        :param validated_data:
+        :return:
+        """
+        email = validated_data['email']
+        instance.email = email
+        instance.save()
+        # 生成激活链接
+        url = instance.generate_verify_email_url()
+        # 发送邮箱
+        send_active_email.delay(email,url)
+        return instance
+
+
 class UserAddressSerializer(serializers.ModelSerializer):
     """
     用户地址序列化器
@@ -158,7 +195,7 @@ class AddUserBrowsingHistorySerializer(serializers.Serializer):
         # redis  [6, 1,2,3,4,5]
         redis_conn = get_redis_connection('history')
         pl = redis_conn.pipeline()
-
+        # 记录
         redis_key = 'history_%s' % user.id
         # 去重
         pl.lrem(redis_key, 0, sku_id)
@@ -167,15 +204,15 @@ class AddUserBrowsingHistorySerializer(serializers.Serializer):
         pl.lpush(redis_key, sku_id)
 
         # 截断
-        pl.ltrim(redis_key, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
+        pl.ltrim(redis_key, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
 
         pl.execute()
-
+        # 接受什么数据,返回数据.如果有模型类对象,返回模型类对象
         return validated_data
 
 
+# 数据返回的序列化器,返回的都是模型类的字段,所以继承ModelSerializer
 class SKUSerializer(serializers.ModelSerializer):
     class Meta:
         model = SKU
         fields = ('id', 'name', 'price', 'default_image_url', 'comments')
-

@@ -1,10 +1,13 @@
 # coding:utf-8
+from email.policy import HTTP
+
 from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView, UpdateAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
@@ -69,11 +72,55 @@ class MobileCountView(APIView):
         return Response(data)
 
 
+class UserDetailView(RetrieveAPIView):
+    """用户基本信息"""
+    serializer_class = serializers.UserDetailSerializer
+    # queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]  # 权限认证
+
+    def get_object(self):
+        """返回当前请求的用户"""
+        # 在类视图对象中,,可以通过类视图对象属性获取request
+        # 在django的请求request对象中,user属性表明当前请求的用户
+        return self.request.user
+
+
+class EmailView(UpdateAPIView):
+    """保存邮箱"""
+    serializer_class = serializers.EmailSerializer
+    permission_classes = [IsAuthenticated]
+
+    # 重写get_objects方法来获取具体的PK值
+    def get_object(self, *args, **kwargs):
+        return self.request.user
+
+
+class VerifyEmailView(APIView):
+    """
+    邮箱验证
+    """
+    def get(self, request):
+        # 获取token
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'message': '缺少token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 验证token
+        user = User.check_verify_email_token(token)
+        if user is None:
+            return Response({'message': '链接信息无效'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.email_active = True
+            user.save()
+            return Response({'message': 'OK'})
+
+
 class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericViewSet):
     """用户地址新增与修改"""
     serializer_class = serializers.UserAddressSerializer
     permissions = [IsAuthenticated]
 
+    # url 是(r'^username/(?P<username>\w{5,20})/count/$'),views.UsernameCountView.asview()
     def get_queryset(self):
         return self.request.user.addresses.filter(is_delete=False)
 
@@ -140,15 +187,18 @@ class UserBrowsingHistoryView(CreateAPIView):
     serializer_class = serializers.AddUserBrowsingHistorySerializer
     permission_classes = [IsAuthenticated]
 
+    # request对象
     def get(self, request):
         # user_id
         user_id = request.user.id
 
         # 查询redis  list
         redis_conn = get_redis_connection('history')
-        sku_id_list = redis_conn.lrange('history_%s' % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT -1)
+        print('1')
+        # 是一个列表
+        sku_id_list = redis_conn.lrange('history_%s' % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
 
-        # 数据库
+        # 数据库 这样查询出的数据没有顺序
         # sku_object_list = SKU.objects.filter(id__in=sku_id_list)
 
         skus = []
@@ -157,5 +207,6 @@ class UserBrowsingHistoryView(CreateAPIView):
             skus.append(sku)
 
         # 序列化 返回
+        print('2')
         serializer = serializers.SKUSerializer(skus, many=True)
         return Response(serializer.data)

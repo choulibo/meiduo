@@ -46,6 +46,8 @@ var vm = new Vue({
             })
         }
 
+
+
         this.get_cart();
         this.get_hot_goods();
         this.get_comments();

@@ -12,7 +12,6 @@ var vm = new Vue({
         send_email_btn_disabled: false,
         send_email_tip: '重新发送验证邮件',
         email_error: false,
-        histories: []
     },
     mounted: function(){
         // 判断用户的登录状态
@@ -91,6 +90,3 @@ var vm = new Vue({
         }
     }
 });
-
-
-
