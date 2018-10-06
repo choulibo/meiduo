@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'haystack'  # 对接搜索引擎
+    'haystack',  # 对接搜索引擎
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
     'corsheaders',
