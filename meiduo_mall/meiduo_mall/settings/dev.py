@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'haystack'  # 对接搜索引擎
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
     'corsheaders',
@@ -300,3 +301,17 @@ EMAIL_HOST_USER = '18103849049@163.com'
 EMAIL_HOST_PASSWORD = '410727ZLB'
 #收件人看到的发件人
 EMAIL_FROM = 'python<18103849049@163.com>'
+
+
+
+# Haystack  搜索引擎
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://192.168.147.161:9200/',  # 此处为elasticsearch运行的服务器ip地址，端口号固定为9200
+        'INDEX_NAME': 'meiduo',  # 指定elasticsearch建立的索引库的名称
+    },
+}
+
+# 当添加、修改、删除数据时，自动生成索引  实时处理数据
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
