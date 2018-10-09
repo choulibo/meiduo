@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from requests import request
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from goods.models import SKU
@@ -138,3 +139,58 @@ class CartsView(GenericAPIView):
         # 序列化数据返回
         serializer = CartSKUSerializer(sku_obj_list,many=True)
         return Response(serializer.data)
+
+    def put(self,request):
+        """修改购物车"""
+        # 传入字段 sku_id count selected
+        serializer = self.get_serializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+
+
+        # 校验字段
+        sku_id = serializer.validated_data['sku_id']
+        count = serializer.validated_data['count']
+        selected = serializer.validated_data['selected']   # 勾选状态 True or False
+
+        # 判断用户登录状态
+        try:
+            user = request.data
+
+        except Exception:
+            user = None
+
+        # 如果登录,修改redis
+        if user and user.is_authenticated:
+            # 修改redis
+            # 建连接redis
+            redis_conn = get_redis_connection('cart')
+            pl = redis_conn.pipeline()
+            pl.hset('cart_%s' % user.id,sku_id,count)
+            if selected:
+                pl.sadd('cart_selected_%s'%user.id,sku_id)
+            else:
+                pl.srem('cart_selected_%s' %user.id,sku_id)
+            pl.execute()
+            return Response(serializer.data)
+        else:
+            # 如果未登录,修改cookie
+            cookie_cart = request.COOKIES.get('cart')
+            if cookie_cart:
+                # cookie中有购物车数据
+                cart_dict = pickle.loads(base64.b64decode(cookie_cart.encode()))
+            else:
+                # 没有购物车数据
+                cart_dict = {}
+            response = Response(serializer.data)
+            # 修改在cart_dict 中的商品
+            if sku_id in cart_dict:
+                cart_dict[sku_id]={
+                    # 将原始的数据覆盖掉
+                    'count':count,
+                    'selected':selected
+                }
+                cart_cookie = base64.b16encode(pickle.dumps(cart_dict)).decode()
+                # 设置cookie  保存
+                response.set_cookie('cart',cart_cookie,max_age=constants.CART_COOKIE_EXPIRES)
+            # 返回
+            return response
