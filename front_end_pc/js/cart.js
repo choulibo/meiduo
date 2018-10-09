@@ -86,7 +86,22 @@ var vm = new Vue({
         },
         // 删除购物车数据
         on_delete: function(index){
-
+            axios.delete(this.host+'/cart/', {
+                    data: {
+                        sku_id: this.cart[index].id
+                    },
+                    headers:{
+                        'Authorization': 'JWT ' + this.token
+                    },
+                    responseType: 'json',
+                    withCredentials: true
+                })
+                .then(response => {
+                    this.cart.splice(index, 1);
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
         on_input: function(index){
             var val = parseInt(this.cart[index].count);
