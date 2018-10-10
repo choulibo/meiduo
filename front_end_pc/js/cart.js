@@ -81,7 +81,7 @@ var vm = new Vue({
         on_selected_all: function(){
             var selected = !this.selected_all;
             axios.put(this.host + '/cart/selection/', {
-                    selected   // 相当于 selected:selected,
+                    selected
                 }, {
                     responseType: 'json',
                     headers:{

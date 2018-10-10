@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 
 # from meiduo_mall.apps.users.models import User
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_jwt.views import ObtainJSONWebToken
 
 from . import serializers
 from .serializers import CreateUserSerializer
@@ -22,6 +23,7 @@ from .models import User
 from . import constants
 from django_redis import get_redis_connection
 from goods.models import SKU
+from carts.utils import merge_cart_cookie_to_redis
 
 
 class UserView(CreateAPIView):
@@ -99,6 +101,7 @@ class VerifyEmailView(APIView):
     """
     邮箱验证
     """
+
     def get(self, request):
         # 获取token
         token = request.query_params.get('token')
@@ -210,3 +213,17 @@ class UserBrowsingHistoryView(CreateAPIView):
         print('2')
         serializer = serializers.SKUSerializer(skus, many=True)
         return Response(serializer.data)
+
+
+class UserAuthorizeView(ObtainJSONWebToken):
+    """用户登录认证视图"""
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        # 如果用户登录成功,合并购物车
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            response = merge_cart_cookie_to_redis(request, user, response)
+        return response
