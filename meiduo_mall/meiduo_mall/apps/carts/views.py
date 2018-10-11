@@ -1,5 +1,4 @@
-import base64
-import pickle
+
 
 from django.shortcuts import render
 
@@ -14,7 +13,8 @@ from django_redis import get_redis_connection
 
 
 from . import constants
-
+import base64
+import pickle
 
 class CartsView(GenericAPIView):
     """购物车"""
@@ -61,12 +61,13 @@ class CartsView(GenericAPIView):
             # 如果没有登录.保存到cookie中  response = Response()  response.set_cookie
             # 取出cookie中的数据
             cart_str = request.COOKIES.get('cart')
-            print(cart_str,"1111111111111111")
-            print(type(cart_str),"22222222222222222222222222")
+            print(cart_str,"1")
+            print(type(cart_str),"2")
             # if cart_str is not None:
             if cart_str:
                 # 解析
                 cart_str = cart_str.encode()  # bytes类型
+                print(cart_str,'3')
                 cart_bytes = base64.b64decode(cart_str)  # base64需要传入bytes类型
                 cart_dict = pickle.loads(cart_bytes)  # 字典类型
 
@@ -196,7 +197,7 @@ class CartsView(GenericAPIView):
                     'count': count,
                     'selected': selected
                 }
-                cart_cookie = base64.b16encode(pickle.dumps(cart_dict)).decode()
+                cart_cookie = base64.b64encode(pickle.dumps(cart_dict)).decode()
                 # 设置cookie  保存
                 response.set_cookie('cart', cart_cookie, max_age=constants.CART_COOKIE_EXPIRES)
             # 返回

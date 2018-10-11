@@ -71,7 +71,7 @@ def merge_cart_cookie_to_redis(request,user,response):
         if redis_cart_selected_add:
             pl.sadd('cart_selected_%s' % user.id,*redis_cart_selected_add)
 
-        pl.excute()
+        pl.execute()
 
     # 删除cookie
         response.delete_cookie('cart')
