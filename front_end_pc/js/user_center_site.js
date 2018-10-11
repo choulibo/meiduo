@@ -40,6 +40,19 @@ var vm = new Vue({
             .catch(error => {
                 alert(error.response.data);
             });
+        axios.get(this.host + '/addresses/', {
+                headers: {
+                        'Authorization': 'JWT ' + this.token
+                    },
+                responseType: 'json'
+            })
+            .then(response => {
+                this.addresses = response.data['addresses'];
+                this.default_address_id = response.data['default_address_id']
+            })
+            .catch(error => {
+                alert(error.response.data);
+            });
     },
     watch: {
         'form_address.province_id': function(){

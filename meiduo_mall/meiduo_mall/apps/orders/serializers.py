@@ -4,7 +4,7 @@ from rest_framework import serializers
 from goods.models import SKU
 
 
-class CartSKUSerializer():
+class CartSKUSerializer(serializers.ModelSerializer):
     """购物车商品序列化器"""
     count = serializers.IntegerField(label='数量')
 

@@ -5,13 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 from django_redis import get_redis_connection
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from carts.serializers import CartSKUSerializer
 from goods.models import SKU
 from orders.serializers import OrderSettlementSerializer
 
 
-class OrderSettlementView():
+class OrderSettlementView(APIView):
     """
     订单结算
     """
@@ -33,14 +34,14 @@ class OrderSettlementView():
         # }
         # 对勾选商品遍历添加到cart字典中
         for sku_id in redis_cart_selected:
-            cart[int(sku_id)] = int(redis_cart_selected[sku_id])
+            cart[int(sku_id)] = int(redis_cart_dict[sku_id])
 
         # 查询数据库中其他字段
         # 获取所有勾选状态的商品sku_id ,并得到该对象
         sku_id_list = cart.keys()
         sku_obj_list = SKU.objects.filter(id__in = sku_id_list)
         for sku in sku_obj_list:
-            sku.count = cart[sku_id]
+            sku.count = cart[sku.id]
 
         # 运费
         freight = Decimal('10.00')

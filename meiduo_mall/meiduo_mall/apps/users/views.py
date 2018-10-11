@@ -125,20 +125,21 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
 
     # url 是(r'^username/(?P<username>\w{5,20})/count/$'),views.UsernameCountView.asview()
     def get_queryset(self):
-        return self.request.user.addresses.filter(is_delete=False)
+        return self.request.user.addresses.filter(is_deleted=False)
 
     # GET /addresses/
     def list(self, request, *args, **kwargs):
-        """用户地址列表数据"""
+        """
+        用户地址列表数据
+        """
         queryset = self.get_queryset()
-
         serializer = self.get_serializer(queryset, many=True)
         user = self.request.user
         return Response({
             'user_id': user.id,
-            'default_addresses_id': user.default_address_id,
+            'default_address_id': user.default_address_id,
             'limit': constants.USER_ADDRESS_COUNTS_LIMIT,
-            'addresses': serializers.data,
+            'addresses': serializer.data,
         })
 
     # POST /addresses/
