@@ -123,8 +123,8 @@ class SaveOrderSerializer(serializers.ModelSerializer):
                             transaction.savepoint_rollback(save_id)
                             raise serializers.ValidationError('商品%s库存不足' % sku.name)
 
-                        import time
-                        time.sleep(5)
+                        # import time
+                        # time.sleep(5)
 
                         # 库存减少 销量增加
                         # sku.stock -= sku_count
