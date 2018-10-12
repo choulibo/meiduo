@@ -133,7 +133,7 @@ class SaveOrderSerializer(serializers.ModelSerializer):
                         new_stock = origin_stock - sku_count
                         new_sales = origin_sales + sku_count
 
-                        # update返回受影响的行数
+                        # update返回受影响的行数  乐观锁更新
                         result = SKU.objects.filter(id=sku.id, stock=origin_stock).update(stock=new_stock, sales=new_sales)
 
                         if result == 0:

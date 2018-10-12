@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_crontab',  # 定时任务
     'carts.apps.CartsConfig',
     'orders.apps.OrdersConfig',
+    'payment.apps.PaymentConfig',
 ]
 
 MIDDLEWARE = [
