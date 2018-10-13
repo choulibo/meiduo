@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'haystack',  # 对接搜索引擎
+    'xadmin',
+    'crispy_forms',
+    'reversion',
     'users.apps.UsersConfig',
     'verifications.apps.VerificationsConfig',
     'corsheaders',
